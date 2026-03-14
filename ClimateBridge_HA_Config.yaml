@@ -1,0 +1,80 @@
+# ⚡ SPARK_LABS: Climate Bridge — Home Assistant Configuration
+# Add to configuration.yaml then do a FULL HA RESTART (not just reload).
+#
+# PLACEHOLDERS — replace before use:
+#   SHELLY_IP       → your Shelly device IP  e.g. 192.168.5.60
+#   SCRIPT_ID       → script slot number     e.g. 7
+#   ENTITY_ID       → HA climate entity      e.g. climate.bedroom_ac
+#
+# HOW TO FIND SCRIPT_ID
+#   In Shelly web UI → Scripts → note the number next to Brain script
+#   Or check Brain boot log: "[CB] /script/7/sync registered"
+
+# ── rest_command ──────────────────────────────────────────────
+# Paste into configuration.yaml
+# Has_bthome: true  → payload needs only temp/hvac/fan/swing
+# Has_bthome: false → add current_temp and humidity lines
+
+rest_command:
+  sync_climate_bridge:
+    url: "http://SHELLY_IP/script/SCRIPT_ID/sync"
+    method: POST
+    content_type: 'application/json'
+    payload: >
+      {
+        "temp": {{ state_attr('ENTITY_ID', 'temperature') | default(21) }},
+        "hvac": "{{ states('ENTITY_ID') | default('off') }}",
+        "fan": "{{ state_attr('ENTITY_ID', 'fan_mode') | default('auto') }}",
+        "swing": "{{ state_attr('ENTITY_ID', 'swing_mode') | default('off') }}"
+      }
+
+# ── rest_command (has_bthome: false variant) ───────────────────
+# Use this version instead if you do NOT have a BTHome sensor.
+# Brain will write room_temp and room_humidity VCs from HA push data.
+#
+# rest_command:
+#   sync_climate_bridge:
+#     url: "http://SHELLY_IP/script/SCRIPT_ID/sync"
+#     method: POST
+#     content_type: 'application/json'
+#     payload: >
+#       {
+#         "temp": {{ state_attr('ENTITY_ID', 'temperature') | default(21) }},
+#         "hvac": "{{ states('ENTITY_ID') | default('off') }}",
+#         "fan": "{{ state_attr('ENTITY_ID', 'fan_mode') | default('auto') }}",
+#         "swing": "{{ state_attr('ENTITY_ID', 'swing_mode') | default('off') }},
+#         "current_temp": {{ state_attr('ENTITY_ID', 'current_temperature') | default(21) }},
+#         "humidity": {{ state_attr('ENTITY_ID', 'humidity') | default(0) }}
+#       }
+#
+# WARNING: if current_temperature or humidity returns None (not reported by AC),
+# Jinja2 renders Python None which is not valid JSON. Use | default(21) guards.
+
+# ── automation ────────────────────────────────────────────────
+# Paste into automations.yaml
+# mode: queued   — processes every state change in order, none dropped
+# max_exceeded: silent — suppresses warning when queue fills under rapid changes
+
+- alias: Push AC to Climate Bridge
+  description: "Push AC state to Shelly on every state or attribute change"
+  triggers:
+    - entity_id: ENTITY_ID
+      trigger: state
+  actions:
+    - action: rest_command.sync_climate_bridge
+  mode: queued
+  max_exceeded: silent
+
+# ── notes ─────────────────────────────────────────────────────
+# After editing configuration.yaml:
+#   Settings → System → Restart (FULL restart, not just reload)
+#   rest_command lives in configuration.yaml — partial reloads do not pick it up.
+#
+# To verify the push is working:
+#   HA Developer Tools → Actions → rest_command.sync_climate_bridge → Call Action
+#   Watch Shelly console for: [CB] sync [PUSH] hvac=... fan=... t=...
+#
+# If no push arrives:
+#   Check HA can reach Shelly IP (different subnets may need routing)
+#   Check script ID is correct — Brain logs it on boot: /script/7/sync
+#   Check automation is enabled and shows a recent "Last triggered" timestamp
