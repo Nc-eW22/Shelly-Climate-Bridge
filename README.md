@@ -1,4 +1,4 @@
-# ⚡️ SPARK_LABS: Climate Bridge v1.0
+# ⚡️ SPARK_LABS: Shelly Climate Bridge v1.0
 **Bring native AC control into the Shelly Smart Control app — powered by Home Assistant as an invisible local bridge.**
 
 *Current Release: v1.0 | Target: Any Shelly Gen3 or Gen4 with virtual component support*
