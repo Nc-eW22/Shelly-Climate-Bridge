@@ -13,8 +13,6 @@
 |:-----------:|:--------:|:-------:|:-----:|
 | ![Device card](docs/images/card.jpg) | ![Full controls](docs/images/controls.jpg) | ![AC Mode dropdown](docs/images/mode.jpg) | ![Swing dropdown](docs/images/swing.jpg) |
 
-> 📁 Place screenshots in a `docs/images/` folder in the repository root. Emoji rendering may vary between Android, iOS, and desktop — the glyphs are functionally identical across platforms.
-
 ---
 
 ## 🌡️ What is this?
