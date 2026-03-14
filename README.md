@@ -262,7 +262,7 @@ Replace the placeholders:
 Add the following to your `automations.yaml`:
 
 ```yaml
-- alias: Push AC to Climate Bridge
+  alias: Push AC to Climate Bridge
   description: "Push AC state to Shelly on every state or attribute change"
   triggers:
     - entity_id: ENTITY_ID
